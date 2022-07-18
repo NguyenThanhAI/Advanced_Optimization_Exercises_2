@@ -4,7 +4,7 @@ import numpy as np
 def sigmoid(xw: np.ndarray) -> np.ndarray:
     return 1/(1 + np.exp(-xw))
 
-def predict(x: np.ndarray, w: np.ndarray, threshold: float=0.8):
+def predict(x: np.ndarray, w: np.ndarray, threshold: float=0.8, return_prob: bool=False):
     if len(x.shape) > 1:
         assert x.shape[1] == w.shape[0]
         xw = np.sum(x * w[np.newaxis, :], axis=1)
@@ -13,9 +13,12 @@ def predict(x: np.ndarray, w: np.ndarray, threshold: float=0.8):
         xw = np.sum(x * w)
 
     prob = sigmoid(xw=xw)
+    if return_prob:
+        return prob
     #print("prob: {}".format(prob))
-    output = np.where(prob > threshold, 1, 0)
-    return output
+    else:
+        output = np.where(prob > threshold, 1, 0)
+        return output
 
 def sigmoid_cross_entropy_with_logits(xw: np.ndarray, y: np.ndarray) -> float:
     a = sigmoid(xw=xw)
