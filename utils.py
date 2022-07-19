@@ -60,12 +60,39 @@ def backtracking_line_search(x: np.ndarray, w: np.ndarray, y: np.ndarray, p: np.
     gradient = derivative_cost_wrt_params(x=x, w=w, y=y)
     f_new = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha*p, y=y)
     f_old = sigmoid_cross_entropy_with_x_w(x=x, w=w, y=y)
-    while f_new > f_old + c * alpha * np.sum(gradient * p):
+    right_term = f_old + c * alpha * np.sum(gradient * p)
+    #while f_new > f_old + c * alpha * np.sum(gradient * p):
+    while f_new > right_term:
         alpha = rho * alpha
         #print("f_new: {}, f_old: {}, alpha: {}".format(f_new, f_old, alpha))
         f_new = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha*p, y=y)
 
     return alpha
+
+
+def check_wolfe_II(x: np.ndarray, w: np.ndarray, y: np.ndarray, alpha: float, p: np.ndarray, c_2: float=0.9) -> bool:
+    new_gradient = derivative_cost_wrt_params(x=x, w=w+alpha*p, y=y)
+    gradient = derivative_cost_wrt_params(x=x, w=w, y=y)
+
+    if np.sum(new_gradient * p) >= c_2 * np.sum(gradient * p):
+        return True
+
+    else:
+        return False
+
+
+def check_goldstein(x: np.ndarray, w: np.ndarray, y: np.ndarray, alpha: float, p: np.ndarray, c: float=0.25) -> bool:
+    assert 0 < c < 0.5
+
+    gradient = derivative_cost_wrt_params(x=x, w=w, y=y)
+    f_new = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha*p, y=y)
+    f_old = sigmoid_cross_entropy_with_x_w(x=x, w=w, y=y)
+
+    if f_old + (1 - c) * alpha * np.sum(gradient * p) <= f_new and f_new <= f_old + c * alpha * np.sum(gradient * p):
+        return True
+    else:
+        return False
+
 
 #print(sigmoid_cross_entropy_with_x_w(x=np.array([[2, 1, 3], [-2, 1, -3]]), w=np.array([1, 1, 1]), y=np.array([1, 0])))
 #print(sigmoid_cross_entropy_with_logits(xw=np.array([2, -1]), y=np.array([0, 1])))
