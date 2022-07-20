@@ -94,8 +94,108 @@ def check_goldstein(x: np.ndarray, w: np.ndarray, y: np.ndarray, alpha: float, p
         return False
 
 
+def quadratic_interplolate(x: np.ndarray, w: np.ndarray, y: np.ndarray, p: np.ndarray, alpha_low: float, alpha_high: float) -> float:
+    assert alpha_low < alpha_high
+    gradient_phi_alpha_low = derivative_cost_wrt_params(x=x, w=w+alpha_low*p, y=y)
+    derivative_phi_alpha_low = np.sum(gradient_phi_alpha_low * p)
+    phi_alpha_low = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha_low*p, y=y)
+    phi_alpha_high = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha_high*p, y=y)
+    alpha_j = alpha_low - ((alpha_low - alpha_high) * derivative_phi_alpha_low)/(2 * (derivative_phi_alpha_low - ((phi_alpha_low - phi_alpha_high)/(alpha_low - alpha_high))))
+    return alpha_j
+
+
+def zoom(x: np.ndarray, w: np.ndarray, y: np.ndarray, p: np.ndarray, alpha_low: float, alpha_high: float, c_1: float=0.0001, c_2: float=0.9) -> float:
+    gradient_zero = derivative_cost_wrt_params(x=x, w=w, y=y)
+    gradient_phi_zero = np.sum(gradient_zero * p)
+    phi_zero = sigmoid_cross_entropy_with_x_w(x=x, w=w, y=y)
+
+    while True:
+        alpha_j = quadratic_interplolate(x=x, w=w, y=y, p=p, alpha_low=alpha_low, alpha_high=alpha_high)
+        phi_alpha_j = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha_j*p, y=y)
+        phi_alpha_low = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha_low*p, y=y)
+        #phi_alpha_high = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha_high*p, y=y)
+
+        if phi_alpha_j > (phi_zero + c_1 * alpha_j * gradient_phi_zero) or phi_alpha_j >= phi_alpha_low:
+            #print("If")
+            alpha_high = alpha_j
+        
+        else:
+            #print("Else")
+            gradient_alpha_j = derivative_cost_wrt_params(x=x, w=w+alpha_j*p, y=y)
+            gradient_phi_alpha_j = np.sum(gradient_alpha_j * p)
+            if np.abs(gradient_phi_alpha_j) <= - c_2 * gradient_phi_zero:
+                return alpha_j
+
+            if gradient_phi_alpha_j * (alpha_high - alpha_low) >= 0:
+                alpha_high = alpha_low
+
+            alpha_low = alpha_j
+
+
+def line_search(x: np.ndarray, w: np.ndarray, y: np.ndarray, p: np.ndarray, alpha_max: float=1, c_1: float=0.0001, c_2: float=0.9) -> float:
+    prev_alpha = 0
+    present_alpha = 0.9 * alpha_max
+
+    gradient_zero = derivative_cost_wrt_params(x=x, w=w, y=y)
+    gradient_phi_zero = np.sum(gradient_zero * p)
+
+    #prev_gradient_alpha = derivative_cost_wrt_params(x=x, w=w+prev_alpha*p, y=y)
+    #prev_gradient_phi_alpha = np.sum(prev_gradient_alpha * p)
+
+    phi_zero = sigmoid_cross_entropy_with_x_w(x=x, w=w, y=y)
+    prev_phi_alpha = sigmoid_cross_entropy_with_x_w(x=x, w=w+prev_alpha*p, y=y)
+
+    i = 1
+
+    while True:
+
+        present_phi_alpha = sigmoid_cross_entropy_with_x_w(x=x, w=w+present_alpha*p, y=y)
+        if (present_phi_alpha > phi_zero + c_1 * present_alpha * gradient_phi_zero) or ((present_phi_alpha >= prev_phi_alpha) and (i > 1)):
+            alpha_star = zoom(x=x, w=w, y=y, p=p, alpha_low=prev_alpha, alpha_high=present_alpha, c_1=c_1, c_2=c_2)
+            return alpha_star
+
+        present_gradient_alpha = derivative_cost_wrt_params(x=x, w=w+present_alpha*p, y=y)
+        present_gradient_phi_alpha = np.sum(present_gradient_alpha * p)
+
+        if np.abs(present_gradient_phi_alpha) <= - c_2 * gradient_phi_zero:
+            alpha_star = present_alpha
+            return alpha_star
+            
+        if present_gradient_phi_alpha >= 0:
+            alpha_star = zoom(x=x, w=w, y=y, p=p, alpha_low=present_alpha, alpha_high=prev_alpha, c_1=c_1, c_2=c_2)
+            return alpha_star
+
+        new_alpha = (present_alpha + alpha_max) / 2
+        prev_alpha = present_alpha
+        present_alpha = new_alpha
+
+        prev_phi_alpha = present_phi_alpha
+
+        i += 1
+
+
+
 #print(sigmoid_cross_entropy_with_x_w(x=np.array([[2, 1, 3], [-2, 1, -3]]), w=np.array([1, 1, 1]), y=np.array([1, 0])))
 #print(sigmoid_cross_entropy_with_logits(xw=np.array([2, -1]), y=np.array([0, 1])))
 #print(sigmoid_cross_entropy_truncated(xw=np.array([2, -1]), y=np.array([0, 1])))
 #print(predict(x=np.array([[2, 1, 3], [-2, 1, -3]]), w=np.array([1, 1, 1]), threshold=0.8))
 #print(derivative_cost_wrt_params(x=np.array([[2, 1, 3], [-2, 1, -3]]), w=np.array([1, 1, 1]), y=np.array([0, 1])))
+
+'''x=np.array([[2, 1, 3], [-2, 1, -3]])
+w=np.array([1, 1, 1])
+y=np.array([0, 1])
+
+alpha_low = 1
+alpha_high = 2
+
+c_1 = 0.0001
+c_2 = 0.9
+c = 0.25
+
+dweight = derivative_cost_wrt_params(x=x, w=w, y=y)
+
+alpha_j = quadratic_interplolate(x=x, w=w, y=y, p=-dweight, alpha_low=alpha_low, alpha_high=alpha_high)
+alpha_star = zoom(x=x, w=w, y=y, p=-dweight, alpha_low=alpha_low, alpha_high=alpha_high, c_1=c_1, c_2=c_2)
+alpha = line_search(x=x, w=w, y=y, p=-dweight, alpha_max=alpha_high, c_1=c_1, c_2=c_2)
+print(alpha_j, alpha_star, alpha)
+print(check_wolfe_II(x=x, w=w, y=y, alpha=alpha, p=-dweight, c_2=c_2), check_goldstein(x=x, w=w, y=y, alpha=alpha, p=-dweight, c=c))'''
