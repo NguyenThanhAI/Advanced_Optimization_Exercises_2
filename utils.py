@@ -115,7 +115,7 @@ def zoom(x: np.ndarray, w: np.ndarray, y: np.ndarray, p: np.ndarray, alpha_low: 
         phi_alpha_low = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha_low*p, y=y)
         #phi_alpha_high = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha_high*p, y=y)
 
-        if phi_alpha_j > (phi_zero + c_1 * alpha_j * gradient_phi_zero) or phi_alpha_j >= phi_alpha_low:
+        if phi_alpha_j > (phi_zero + c_1 * alpha_j * gradient_phi_zero) or (phi_alpha_j >= phi_alpha_low):
             #print("If")
             alpha_high = alpha_j
         
