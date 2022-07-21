@@ -1,6 +1,31 @@
 import numpy as np
 
 
+class AverageMeter(object):
+
+    def __init__(self, name, fmt=':f'):
+        self.name = name
+        self.fmt = fmt
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+    def __str__(self):
+        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        return fmtstr.format(**self.__dict__)
+
+    
+
 def sigmoid(xw: np.ndarray) -> np.ndarray:
     return 1/(1 + np.exp(-xw))
 
@@ -60,9 +85,9 @@ def backtracking_line_search(x: np.ndarray, w: np.ndarray, y: np.ndarray, p: np.
     gradient = derivative_cost_wrt_params(x=x, w=w, y=y)
     f_new = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha*p, y=y)
     f_old = sigmoid_cross_entropy_with_x_w(x=x, w=w, y=y)
-    right_term = f_old + c * alpha * np.sum(gradient * p)
-    #while f_new > f_old + c * alpha * np.sum(gradient * p):
-    while f_new > right_term:
+    #right_term = f_old + c * alpha * np.sum(gradient * p)
+    while f_new > f_old + c * alpha * np.sum(gradient * p):
+    #while f_new > right_term:
         alpha = rho * alpha
         #print("f_new: {}, f_old: {}, alpha: {}".format(f_new, f_old, alpha))
         f_new = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha*p, y=y)
@@ -172,6 +197,18 @@ def line_search(x: np.ndarray, w: np.ndarray, y: np.ndarray, p: np.ndarray, alph
         prev_phi_alpha = present_phi_alpha
 
         i += 1
+
+
+def adjust_step_length(x: np.ndarray, w: np.ndarray, y: np.ndarray, alpha: float, p: np.ndarray, epsilon: float=1e-3, delta=1e-6):
+    phi_alpha = sigmoid_cross_entropy_with_x_w(x=x, w=w+alpha*p, y=y)
+    phi_alpha_plus_epsilon = sigmoid_cross_entropy_with_x_w(x=x, w=w+(alpha + epsilon) * p, y=y)
+    phi_alpha_subtract_epsilon = sigmoid_cross_entropy_with_x_w(x=x, w=w+(alpha - epsilon) * p, y=y)
+    phi_alpha_plus_2epsilon = sigmoid_cross_entropy_with_x_w(x=x, w=w+(alpha + 2 * epsilon) * p, y=y)
+    phi_alpha_subtract_2epsilon = sigmoid_cross_entropy_with_x_w(x=x, w=w+(alpha - 2 * epsilon) * p, y=y)
+
+    new_alpha = alpha - 2 * epsilon * (phi_alpha_plus_epsilon - phi_alpha_subtract_epsilon) / (phi_alpha_plus_2epsilon + phi_alpha_subtract_2epsilon - 2 * phi_alpha + delta)
+
+    return new_alpha
 
 
 
