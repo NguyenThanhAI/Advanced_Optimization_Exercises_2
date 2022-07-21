@@ -82,7 +82,7 @@ def init_weights(x: np.ndarray, use_bias: bool=True, initializer: str="xavier") 
     return weights
 
 
-def train_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, init_weights: np.ndarray, optimizer: str="gd", threshold: float=0.6, num_epochs: int=100000, c_1: float=1e-4, c_2: float=0.9, c: float=0.25, rho: float=0.5, init_alpha: float=2, epsilon_1: float=0.01, epsilon_2: float=0.01, epsilon_3: float=0.01):
+def train_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, init_weights: np.ndarray, optimizer: str="gd", threshold: float=0.6, num_epochs: int=100000, c_1: float=1e-4, c_2: float=0.9, c: float=0.25, rho: float=0.5, init_alpha: float=2, epsilon_1: float=0.01, epsilon_2: float=0.01, epsilon_3: float=0.01, stop_condition: bool=False):
     train_cost_list = []
     train_acc_list = []
 
@@ -90,6 +90,8 @@ def train_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val: np.n
     val_acc_list = []
 
     time_epoch_list = []
+
+    timestamp_epoch_list = []
 
     wolfe_II_list = []
     goldstein_list = []
@@ -104,6 +106,9 @@ def train_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val: np.n
     v_hat = np.zeros_like(weights, dtype=np.float)
     d = np.zeros_like(weights, dtype=np.float)
     u = 0.
+
+    start_timestamp = time.time()
+
     for epoch in tqdm(range(num_epochs)):
 
         epoch_start = time.time()
@@ -149,6 +154,7 @@ def train_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val: np.n
         epoch_end = time.time()
 
         time_epoch_list.append(epoch_end - epoch_start)
+        timestamp_epoch_list.append(epoch_end - start_timestamp)
 
         train_cost = sigmoid_cross_entropy_with_x_w(x=x_train, w=weights, y=y_train)
         val_cost = sigmoid_cross_entropy_with_x_w(x=x_val, w=weights, y=y_val)
@@ -173,12 +179,12 @@ def train_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val: np.n
         prev_train_cost = copy.deepcopy(train_cost)
 
     if optimizer.lower() == "gd":
-        return weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, time_epoch_list, wolfe_II_list, goldstein_list
+        return weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, time_epoch_list, timestamp_epoch_list, wolfe_II_list, goldstein_list
     else:
-        return weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, time_epoch_list
+        return weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, time_epoch_list, timestamp_epoch_list
 
 
-def train_batch_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, init_weights: np.ndarray, batch_size: int, optimizer: str="gd", threshold: float=0.6, num_epochs: int=100000, c_1: float=1e-4, c_2: float=0.9, c: float=0.25, rho: float=0.5, init_alpha: float=2, epsilon_1: float=0.01, epsilon_2: float=0.01, epsilon_3: float=0.01):
+def train_batch_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, init_weights: np.ndarray, batch_size: int, optimizer: str="gd", threshold: float=0.6, num_epochs: int=100000, c_1: float=1e-4, c_2: float=0.9, c: float=0.25, rho: float=0.5, init_alpha: float=2, epsilon_1: float=0.01, epsilon_2: float=0.01, epsilon_3: float=0.01, stop_condition: bool=False):
     train_cost_list = []
     train_acc_list = []
 
@@ -190,6 +196,9 @@ def train_batch_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val
 
     time_epoch_list = []
     time_step_list = []
+
+    timestamp_epoch_list = []
+    timestamp_step_list = []
 
     wolfe_II_list = []
     goldstein_list = []
@@ -204,6 +213,9 @@ def train_batch_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val
     v_hat = np.zeros_like(weights, dtype=np.float)
     d = np.zeros_like(weights, dtype=np.float)
     u = 0.
+
+    start_timestamp = time.time()
+
     for epoch in tqdm(range(num_epochs)):
         index = np.arange(x_train.shape[0])
         np.random.shuffle(index)
@@ -257,6 +269,7 @@ def train_batch_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val
             step_end = time.time()
 
             time_step_list.append(step_end - step_start)
+            timestamp_step_list.append(step_end - start_timestamp)
 
             cost = sigmoid_cross_entropy_with_x_w(x=x_batch, w=weights, y=y_batch)
             output = predict(x=x_batch, w=weights, threshold=threshold).astype(np.float)
@@ -268,6 +281,7 @@ def train_batch_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val
         epoch_end = time.time()
 
         time_epoch_list.append(epoch_end - epoch_start)
+        timestamp_epoch_list.append(epoch_end - start_timestamp)
 
         train_cost = sigmoid_cross_entropy_with_x_w(x=x_train, w=weights, y=y_train)
         val_cost = sigmoid_cross_entropy_with_x_w(x=x_val, w=weights, y=y_val)
@@ -292,9 +306,9 @@ def train_batch_gradient_descent(x_train: np.ndarray, y_train: np.ndarray, x_val
         prev_train_cost = copy.deepcopy(train_cost)
     
     if optimizer.lower() == "gd":
-        return weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, wolfe_II_list, goldstein_list
+        return weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, timestamp_epoch_list, timestamp_step_list, wolfe_II_list, goldstein_list
     else:
-        return weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list
+        return weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, timestamp_epoch_list, timestamp_step_list
     
 
 if __name__ == "__main__":
@@ -335,7 +349,9 @@ if __name__ == "__main__":
     result_train_cost_step_list = {} 
     result_train_acc_step_list = {} 
     result_time_epoch_list = {} 
-    result_time_step_list = {} 
+    result_time_step_list = {}
+    result_timestamp_epoch_list = {}
+    result_timestamp_step_list = {} 
     result_wolfe_II_list = {} 
     result_goldstein_list = {}
 
@@ -345,23 +361,24 @@ if __name__ == "__main__":
 
         if optimizer.lower() == "gd":
 
-            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, time_epoch_list, wolfe_II_list, goldstein_list = train_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                                                           optimizer=optimizer,
-                                                                                                                                                           threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c, rho=rho,
-                                                                                                                                                           init_alpha=1)
+            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, time_epoch_list, timestamp_epoch_list, wolfe_II_list, goldstein_list = train_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
+                                                                                                                                                                                 optimizer=optimizer,
+                                                                                                                                                                                 threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c, rho=rho,
+                                                                                                                                                                                 init_alpha=1)
             result_wolfe_II_list[optimizer] = wolfe_II_list
             result_goldstein_list[optimizer] = goldstein_list
         else:
-            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, time_epoch_list = train_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                            optimizer=optimizer,
-                                                                                                                            threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c, rho=rho,
-                                                                                                                            init_alpha=1)
+            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, time_epoch_list, timestamp_epoch_list = train_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
+                                                                                                                                                  optimizer=optimizer,
+                                                                                                                                                  threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c, rho=rho,
+                                                                                                                                                  init_alpha=1)
         result_weights[optimizer] = weights
         result_train_cost_list[optimizer] = train_cost_list
         result_train_acc_list[optimizer] = train_acc_list
         result_val_cost_list[optimizer] = val_cost_list
         result_val_acc_list[optimizer] = val_acc_list
         result_time_epoch_list[optimizer] = time_epoch_list
+        result_timestamp_epoch_list[optimizer] = timestamp_epoch_list
 
     
     for optimizer in optimizer_list:
@@ -370,17 +387,17 @@ if __name__ == "__main__":
 
         if optimizer.lower() == "gd":
 
-            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, wolfe_II_list, goldstein_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                                                                                                                            optimizer=optimizer,
-                                                                                                                                                                                                                            batch_size=batch_size, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
-                                                                                                                                                                                                                            rho=rho, init_alpha=1e-1)
+            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, timestamp_epoch_list, timestamp_step_list, wolfe_II_list, goldstein_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
+                                                                                                                                                                                                                                                                       optimizer=optimizer,
+                                                                                                                                                                                                                                                                       batch_size=batch_size, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
+                                                                                                                                                                                                                                                                       rho=rho, init_alpha=1e-1)
             result_wolfe_II_list["batch_{}".format(optimizer)] = wolfe_II_list
             result_goldstein_list["batch_{}".format(optimizer)] = goldstein_list
         else:
-            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                                                                                             optimizer=optimizer,
-                                                                                                                                                                                             batch_size=batch_size, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
-                                                                                                                                                                                             rho=rho, init_alpha=1e-1)
+            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, timestamp_epoch_list, timestamp_step_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
+                                                                                                                                                                                                                                        optimizer=optimizer,
+                                                                                                                                                                                                                                        batch_size=batch_size, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
+                                                                                                                                                                                                                                        rho=rho, init_alpha=1e-1)
 
         result_weights["batch_{}".format(optimizer)] = weights
         result_train_cost_list["batch_{}".format(optimizer)] = train_cost_list
@@ -390,7 +407,9 @@ if __name__ == "__main__":
         result_train_cost_step_list["batch_{}".format(optimizer)] = train_cost_step_list
         result_train_acc_step_list["batch_{}".format(optimizer)] = train_acc_step_list
         result_time_epoch_list["batch_{}".format(optimizer)] = time_epoch_list
-        result_time_step_list["batch_{}".format(optimizer)] = time_step_list                                                                                                                                                                            
+        result_time_step_list["batch_{}".format(optimizer)] = time_step_list
+        result_timestamp_epoch_list["batch_{}".format(optimizer)] = timestamp_epoch_list
+        result_timestamp_step_list["batch_{}".format(optimizer)] = timestamp_step_list                                                                                                                                                                           
 
     for optimizer in optimizer_list:
 
@@ -398,19 +417,19 @@ if __name__ == "__main__":
 
         if optimizer.lower() == "gd":
 
-            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, wolfe_II_list, goldstein_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                                                                                                                            optimizer=optimizer,
-                                                                                                                                                                                                                            batch_size=1, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
-                                                                                                                                                                                                                            rho=rho, init_alpha=1e-1)
+            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, timestamp_epoch_list, timestamp_step_list, wolfe_II_list, goldstein_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
+                                                                                                                                                                                                                                                                       optimizer=optimizer,
+                                                                                                                                                                                                                                                                       batch_size=1, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
+                                                                                                                                                                                                                                                                       rho=rho, init_alpha=1e-1)
 
             result_wolfe_II_list["stochastic_{}".format(optimizer)] = wolfe_II_list
             result_goldstein_list["stochastic_{}".format(optimizer)] = goldstein_list
 
         else:
-            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                                                                                             optimizer=optimizer,
-                                                                                                                                                                                             batch_size=1, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
-                                                                                                                                                                                             rho=rho, init_alpha=1e-1)
+            weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, timestamp_epoch_list, timestamp_step_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
+                                                                                                                                                                                                                                        optimizer=optimizer,
+                                                                                                                                                                                                                                        batch_size=1, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
+                                                                                                                                                                                                                                        rho=rho, init_alpha=1e-1)
         result_weights["stochastic_{}".format(optimizer)] = weights
         result_train_cost_list["stochastic_{}".format(optimizer)] = train_cost_list
         result_train_acc_list["stochastic_{}".format(optimizer)] = train_acc_list
@@ -420,3 +439,5 @@ if __name__ == "__main__":
         result_train_acc_step_list["stochastic_{}".format(optimizer)] = train_acc_step_list
         result_time_epoch_list["stochastic_{}".format(optimizer)] = time_epoch_list
         result_time_step_list["stochastic_{}".format(optimizer)] = time_step_list
+        result_timestamp_epoch_list["stochastic_{}".format(optimizer)] = timestamp_epoch_list
+        result_timestamp_step_list["stochastic_{}".format(optimizer)] = timestamp_step_list
