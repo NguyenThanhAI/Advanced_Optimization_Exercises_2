@@ -1,3 +1,4 @@
+from typing import Tuple
 import numpy as np
 
 
@@ -210,6 +211,98 @@ def adjust_step_length(x: np.ndarray, w: np.ndarray, y: np.ndarray, alpha: float
 
     return new_alpha
 
+
+def adam_step(weights: np.ndarray, dweights: np.ndarray, m: np.ndarray, v: np.ndarray, alpha: float, t: int, beta_1: float=0.5, beta_2: float=0.99, epsilon: float=1e-8) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    m = beta_1 * m + (1 - beta_1) * dweights
+    v = beta_2 * v + (1 - beta_2) * dweights**2
+
+    m_hat = m / (1 - beta_1**t)
+    v_hat = v / (1 - beta_2**t)
+
+    weights = weights - (alpha * m_hat) / (np.sqrt(v_hat) + epsilon)
+
+    return weights, m, v
+
+
+def adamax_step(weights: np.ndarray, dweights: np.ndarray, m: np.ndarray, u: float, alpha: float, t: int, beta_1: float=0.9, beta_2: float=0.99) -> Tuple[np.ndarray, np.ndarray, float]:
+
+    m = beta_1 * m + (1 - beta_1) * dweights
+    u = np.maximum(beta_2 * u, np.max(dweights))
+
+    weights = weights - (alpha * m) / ((1 - beta_1**t) * u)
+
+    return weights, m, u
+
+
+def nadam_step(weights: np.ndarray, dweights: np.ndarray, m: np.ndarray, v: np.ndarray, alpha: float, t: int, beta_1: float=0.5, beta_2: float=0.99, epsilon: float=1e-8) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    m = beta_1 * m + (1 - beta_1) * dweights
+    v = beta_2 * v + (1 - beta_2) * dweights**2
+
+    m_hat = m / (1 - beta_1**t)
+    v_hat = v / (1 - beta_2**t)
+    
+    weights = weights - (alpha * (beta_1 * m_hat + ((1 - beta_1)/(1 - beta_1**t))*dweights)) / (np.sqrt(v_hat) + epsilon)
+
+    return weights, m, v
+
+
+def amsgrad_step(weights: np.ndarray, dweights: np.ndarray, m: np.ndarray, v: np.ndarray, v_hat: np.ndarray, alpha: float, t: int, beta_1: float=0.5, beta_2: float=0.99, epsilon: float=1e-8) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    m = beta_1 * m + (1 - beta_1) * dweights
+    v = beta_2 * v + (1 - beta_2) * dweights**2
+
+    v_hat = np.maximum(v_hat, v)
+
+    weights = weights - (alpha * m) / (np.sqrt(v_hat) + epsilon)
+
+    return weights, m, v, v_hat
+
+
+def adabelief_step(weights: np.ndarray, dweights: np.ndarray, m: np.ndarray, v: np.ndarray, alpha: float, t: int, beta_1: float=0.5, beta_2: float=0.99, epsilon: float=1e-8) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    m = beta_1 * m + (1 - beta_1) * dweights
+    v = beta_2 * v + (1 - beta_2) * (dweights - m) ** 2
+
+    m_hat = m / (1 - beta_1**t)
+    v_hat = v / (1 - beta_2**t)
+
+    weights = weights - (alpha * m_hat) / (np.sqrt(v_hat) + epsilon)
+
+    return weights, m, v
+
+
+def adagrad_step(weights: np.ndarray, dweights: np.ndarray, v: np.ndarray, alpha: float, epsilon: float=1e-8) -> Tuple[np.ndarray, np.ndarray]:
+    v = v + dweights**2
+
+    weights = weights - (alpha * dweights) / (np.sqrt(v) + epsilon)
+
+    return weights, v
+
+
+def rmsprop_step(weights: np.ndarray, dweights: np.ndarray, v: np.ndarray, alpha: float, beta_2: float=0.9, epsilon: float=1e-8) -> Tuple[np.ndarray, np.ndarray]:
+    v = beta_2 * v + (1 - beta_2) * dweights ** 2
+
+    weights = weights - (alpha * dweights) / (np.sqrt(v) + epsilon)
+
+    return weights, v
+
+
+def momentum_step(weights: np.ndarray, dweights: np.ndarray, m: np.ndarray, alpha: float, beta_1: float=0.9) -> Tuple[np.ndarray, np.ndarray]:
+    m = beta_1 * m + (1 - beta_1) * dweights
+
+    weights = weights - alpha * m
+
+    return weights, m
+
+
+def adadelta_step(weights: np.ndarray, dweights: np.ndarray, v: np.ndarray, d: np.ndarray, alpha: float, beta_2: float=0.99, epsilon: float=1e-8) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    v = beta_2 * v + (1 - beta_2) * dweights ** 2
+
+    delta_w = - (alpha * np.sqrt(d + epsilon) * dweights) / (np.sqrt(v + epsilon))
+
+    weights = weights + delta_w
+
+    d = beta_2 * d + (1 - beta_2) * delta_w ** 2
+
+    return weights, v, d
 
 
 #print(sigmoid_cross_entropy_with_x_w(x=np.array([[2, 1, 3], [-2, 1, -3]]), w=np.array([1, 1, 1]), y=np.array([1, 0])))
