@@ -3,6 +3,7 @@ import os
 import argparse
 import time
 import copy
+import pickle
 
 from math import ceil
 from typing import List, Tuple
@@ -359,6 +360,7 @@ if __name__ == "__main__":
     normalize = "minmax"
     use_bias = True
     initializer = "xavier"
+    num_epochs = 20000
     c_1 = 1e-2
     c_2 = 0.9
     c = 0.25
@@ -366,6 +368,10 @@ if __name__ == "__main__":
     rho = 0.5
     batch_size = 64
     stop_condition = False
+    save_dir = "."
+
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir, exist_ok=True)
 
     optimizer_list = ["gd", "Adam", "Momentum", "Adagrad", "RMSProp", "Adadelta", "Adamax", "Nadam", "AMSGrad", "AdaBelief"]
 
@@ -405,16 +411,16 @@ if __name__ == "__main__":
         if optimizer.lower() == "gd":
 
             weights, min_val_cost_weights, max_val_acc_weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, time_epoch_list, timestamp_epoch_list, wolfe_II_list, goldstein_list = train_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                                                                                 optimizer=optimizer,
-                                                                                                                                                                                 threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c, rho=rho,
-                                                                                                                                                                                 init_alpha=1, stop_condition=stop_condition)
+                                                                                                                                                                                                                            optimizer=optimizer,
+                                                                                                                                                                                                                            threshold=threshold, num_epochs=num_epochs, c_1=c_1, c_2=c_2, c=c, rho=rho,
+                                                                                                                                                                                                                            init_alpha=1, stop_condition=stop_condition)
             result_wolfe_II_list[optimizer] = wolfe_II_list
             result_goldstein_list[optimizer] = goldstein_list
         else:
             weights, min_val_cost_weights, max_val_acc_weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, time_epoch_list, timestamp_epoch_list = train_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                                                  optimizer=optimizer,
-                                                                                                                                                  threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c, rho=rho,
-                                                                                                                                                  init_alpha=1, stop_condition=stop_condition)
+                                                                                                                                                                                             optimizer=optimizer,
+                                                                                                                                                                                             threshold=threshold, num_epochs=num_epochs, c_1=c_1, c_2=c_2, c=c, rho=rho,
+                                                                                                                                                                                             init_alpha=1, stop_condition=stop_condition)
         result_weights[optimizer] = weights
         result_min_val_cost_weights[optimizer] = min_val_cost_weights
         result_max_val_acc_weights[optimizer] = max_val_acc_weights
@@ -433,18 +439,18 @@ if __name__ == "__main__":
         if optimizer.lower() == "gd":
 
             weights, min_val_cost_weights, max_val_acc_weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, timestamp_epoch_list, timestamp_step_list, wolfe_II_list, goldstein_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                                                                                                                                                                       optimizer=optimizer,
-                                                                                                                                                                                                                                                                       batch_size=batch_size, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
-                                                                                                                                                                                                                                                                       rho=rho, init_alpha=1e-1,
-                                                                                                                                                                                                                                                                       stop_condition=stop_condition)
+                                                                                                                                                                                                                                                                                                                  optimizer=optimizer,
+                                                                                                                                                                                                                                                                                                                  batch_size=batch_size, threshold=threshold, num_epochs=num_epochs, c_1=c_1, c_2=c_2, c=c,
+                                                                                                                                                                                                                                                                                                                  rho=rho, init_alpha=1e-1,
+                                                                                                                                                                                                                                                                                                                  stop_condition=stop_condition)
             result_wolfe_II_list["batch_{}".format(optimizer)] = wolfe_II_list
             result_goldstein_list["batch_{}".format(optimizer)] = goldstein_list
         else:
             weights, min_val_cost_weights, max_val_acc_weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, timestamp_epoch_list, timestamp_step_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                                                                                                                                        optimizer=optimizer,
-                                                                                                                                                                                                                                        batch_size=batch_size, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
-                                                                                                                                                                                                                                        rho=rho, init_alpha=1e-1,
-                                                                                                                                                                                                                                        stop_condition=stop_condition)
+                                                                                                                                                                                                                                                                                   optimizer=optimizer,
+                                                                                                                                                                                                                                                                                   batch_size=batch_size, threshold=threshold, num_epochs=num_epochs, c_1=c_1, c_2=c_2, c=c,
+                                                                                                                                                                                                                                                                                   rho=rho, init_alpha=1e-1,
+                                                                                                                                                                                                                                                                                   stop_condition=stop_condition)
 
         result_weights["batch_{}".format(optimizer)] = weights
         result_min_val_cost_weights["batch_{}".format(optimizer)] = min_val_cost_weights
@@ -467,20 +473,20 @@ if __name__ == "__main__":
         if optimizer.lower() == "gd":
 
             weights, min_val_cost_weights, max_val_acc_weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, timestamp_epoch_list, timestamp_step_list, wolfe_II_list, goldstein_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                                                                                                                                                                       optimizer=optimizer,
-                                                                                                                                                                                                                                                                       batch_size=1, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
-                                                                                                                                                                                                                                                                       rho=rho, init_alpha=1e-1,
-                                                                                                                                                                                                                                                                       stop_condition=stop_condition)
+                                                                                                                                                                                                                                                                                                                  optimizer=optimizer,
+                                                                                                                                                                                                                                                                                                                  batch_size=1, threshold=threshold, num_epochs=500, c_1=c_1, c_2=c_2, c=c,
+                                                                                                                                                                                                                                                                                                                  rho=rho, init_alpha=1e-1,
+                                                                                                                                                                                                                                                                                                                  stop_condition=stop_condition)
 
             result_wolfe_II_list["stochastic_{}".format(optimizer)] = wolfe_II_list
             result_goldstein_list["stochastic_{}".format(optimizer)] = goldstein_list
 
         else:
             weights, min_val_cost_weights, max_val_acc_weights, train_cost_list, train_acc_list, val_cost_list, val_acc_list, train_cost_step_list, train_acc_step_list, time_epoch_list, time_step_list, timestamp_epoch_list, timestamp_step_list = train_batch_gradient_descent(x_train=x_train, y_train=y_train, x_val=x_val, y_val=y_val, init_weights=start_weights,
-                                                                                                                                                                                                                                        optimizer=optimizer,
-                                                                                                                                                                                                                                        batch_size=1, threshold=threshold, num_epochs=100000, c_1=c_1, c_2=c_2, c=c,
-                                                                                                                                                                                                                                        rho=rho, init_alpha=1e-1,
-                                                                                                                                                                                                                                        stop_condition=stop_condition)
+                                                                                                                                                                                                                                                                                   optimizer=optimizer,
+                                                                                                                                                                                                                                                                                   batch_size=1, threshold=threshold, num_epochs=500, c_1=c_1, c_2=c_2, c=c,
+                                                                                                                                                                                                                                                                                   rho=rho, init_alpha=1e-1,
+                                                                                                                                                                                                                                                                                   stop_condition=stop_condition)
         result_weights["stochastic_{}".format(optimizer)] = weights
         result_min_val_cost_weights["stochastic_{}".format(optimizer)] = min_val_cost_weights
         result_max_val_acc_weights["stochastic_{}".format(optimizer)] = max_val_acc_weights
@@ -494,3 +500,18 @@ if __name__ == "__main__":
         result_time_step_list["stochastic_{}".format(optimizer)] = time_step_list
         result_timestamp_epoch_list["stochastic_{}".format(optimizer)] = timestamp_epoch_list
         result_timestamp_step_list["stochastic_{}".format(optimizer)] = timestamp_step_list
+
+    
+    results = {"weights": result_weights, "min_val_cost_weights": result_min_val_cost_weights,
+               "max_val_acc_weights": max_val_acc_weights, "train_cost": result_train_cost_list,
+               "train_acc": result_train_acc_list, "val_cost": result_val_cost_list,
+               "val_acc": result_val_acc_list, "train_cost_step": result_train_cost_step_list,
+               "train_acc_step": result_train_acc_step_list, "time_epoch": result_time_epoch_list,
+               "time_step": result_time_step_list, "timestamp_epoch": result_timestamp_epoch_list,
+               "timestamp_step": result_time_step_list,
+               "wolf_II": result_wolfe_II_list, "goldstein": result_goldstein_list}
+
+
+    with open(os.path.join(save_dir, "results.pkl"), "wb") as f:
+        pickle.dump(results, f)
+        f.close()
