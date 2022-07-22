@@ -36,8 +36,16 @@ def create_data(csv_path: str, normalize: str="minmax", use_bias: bool=True) -> 
 
     df['label']=df['label'].replace({'male':1,'female':0})
 
-    x = df.drop("label", axis=1).to_numpy(dtype=np.float32)
-    y = df["label"].values.astype(np.float32)
+    df2 = df[["meanfreq", "sd", "median", "Q25", "IQR", "sp.ent", "sfm", "mode", "meanfun", "minfun", "maxfun", "meandom", "mindom", "maxdom", "label"]]
+
+    df2['meanfreq'] = df2['meanfreq'].apply(lambda x:x*2)
+    df2['median'] = df2['meanfreq'] + df2['mode']
+    df2['median'] = df2['median'].apply(lambda x: x/3)
+    df2['pear_skew'] = df2['meanfreq']-df2['mode']
+    df2['pear_skew'] = df2['pear_skew']/df2['sd']
+
+    x = df2.drop("label", axis=1).to_numpy(dtype=np.float32)
+    y = df2["label"].values.astype(np.float32)
 
     if normalize == "minmax":
 
