@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import List, Tuple
 import numpy as np
 
 
@@ -25,6 +25,15 @@ class AverageMeter(object):
         fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
         return fmtstr.format(**self.__dict__)
 
+
+def exponential_moving_average(signal: List, weight: float) -> np.ndarray:
+    ema = np.zeros(len(signal))
+    ema[0] = signal[0]
+
+    for i in range(1, len(signal)):
+        ema[i] = (signal[i] * weight) + (ema[i - 1] * (1 - weight))
+
+    return ema
     
 
 def sigmoid(xw: np.ndarray) -> np.ndarray:
@@ -224,12 +233,12 @@ def adam_step(weights: np.ndarray, dweights: np.ndarray, m: np.ndarray, v: np.nd
     return weights, m, v
 
 
-def adamax_step(weights: np.ndarray, dweights: np.ndarray, m: np.ndarray, u: float, alpha: float, t: int, beta_1: float=0.9, beta_2: float=0.99) -> Tuple[np.ndarray, np.ndarray, float]:
+def adamax_step(weights: np.ndarray, dweights: np.ndarray, m: np.ndarray, u: float, alpha: float, t: int, beta_1: float=0.9, beta_2: float=0.99, epsilon: float=1e-8) -> Tuple[np.ndarray, np.ndarray, float]:
 
     m = beta_1 * m + (1 - beta_1) * dweights
     u = np.maximum(beta_2 * u, np.max(dweights))
 
-    weights = weights - (alpha * m) / ((1 - beta_1**t) * u)
+    weights = weights - (alpha * m) / ((1 - beta_1**t) * u + epsilon)
 
     return weights, m, u
 
