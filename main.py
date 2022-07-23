@@ -396,6 +396,11 @@ if __name__ == "__main__":
 
     x_train, y_train, x_val, y_val = create_data(csv_path=csv_path, normalize=normalize, use_bias=use_bias)
 
+    np.save(os.path.join(save_dir, "x_train.npy"), x_train)
+    np.save(os.path.join(save_dir, "y_train.npy"), y_train)
+    np.save(os.path.join(save_dir, "x_val.npy"), x_val)
+    np.save(os.path.join(save_dir, "y_val.npy"), y_val)
+
     #print(x_train.shape, y_train.shape, x_val.shape, y_val.shape)
 
     start_weights = init_weights(x=x_train, use_bias=use_bias, initializer=initializer)
