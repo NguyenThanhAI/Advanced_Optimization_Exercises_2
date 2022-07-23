@@ -389,7 +389,7 @@ if __name__ == "__main__":
     if not os.path.exists(save_dir):
         os.makedirs(save_dir, exist_ok=True)
 
-    step_length_list = [1e-2, 1e-1, 1, 2, 5, 10]
+    step_length_list = [1e-3, 1e-2, 1e-1, 1, 2, 5]
 
     optimizer_list = ["gd", "Adam", "Momentum", "Adagrad", "RMSProp", "Adadelta", "Adamax", "Nadam", "AMSGrad", "AdaBelief"]
 
