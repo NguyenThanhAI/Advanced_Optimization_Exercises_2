@@ -20,6 +20,8 @@ from sklearn.model_selection import StratifiedKFold
 from utils import AverageMeter, sigmoid, predict, sigmoid_cross_entropy_with_logits, sigmoid_cross_entropy_with_x_w, sigmoid_cross_entropy_truncated, derivative_cost_wrt_params, backtracking_line_search, check_wolfe_II, check_goldstein, line_search, adjust_step_length, adam_step, momentum_step, adagrad_step, rmsprop_step, adadelta_step, adamax_step, nadam_step, amsgrad_step, adabelief_step
 
 
+np.random.seed(1000)
+
 def get_args():
 
     parser = argparse.ArgumentParser()
