@@ -57,7 +57,7 @@ def predict(x: np.ndarray, w: np.ndarray, threshold: float=0.8, return_prob: boo
 
 def sigmoid_cross_entropy_with_logits(xw: np.ndarray, y: np.ndarray) -> float:
     a = sigmoid(xw=xw)
-    cost = - np.mean(y * np.log(a) + (1 - y) * np.log(1-a))
+    cost = - np.mean(y * np.log(a + 1e-8) + (1 - y) * np.log(1-a + 1e-8))
     return cost
 
 
