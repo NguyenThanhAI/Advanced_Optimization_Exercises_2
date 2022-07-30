@@ -551,7 +551,7 @@ if __name__ == "__main__":
                "wolf_II": result_wolfe_II_list, "goldstein": result_goldstein_list}'''
 
     results = {"weights": result_weights, "min_val_cost_weights": result_min_val_cost_weights,
-               "max_val_acc_weights": max_val_acc_weights, "train_cost": result_train_cost_list,
+               "max_val_acc_weights": result_max_val_acc_weights, "train_cost": result_train_cost_list,
                "train_acc": result_train_acc_list, "val_cost": result_val_cost_list,
                "val_acc": result_val_acc_list, "time_epoch": result_time_epoch_list,
                "timestamp_epoch": result_timestamp_epoch_list,
